@@ -1,0 +1,56 @@
+#!/bin/bash
+
+gracefull_exit()
+{
+echo "exiting gracefully, reverting fan to Auto"
+echo 0 > /sys/class/hwmon/hwmon5/recalculate
+
+exit
+
+}
+
+trap gracefull_exit 1 2 3 6 9 15
+
+temp_rpm_count=$(wc -l speeds | cut -d " " -f 1)
+tempArray=()
+rmpArray=()
+
+index=0;
+IFS=' '
+while read line; do
+# reading each line
+read -a values <<< "$line"
+tempArray[$index]=${values[0]}
+rpmArray[$index]=${values[1]}
+index=$((index + 1))
+done < speeds
+
+echo ${tempArray[*]}
+echo ${rpmArray[*]}
+
+
+echo 1 > /sys/class/hwmon/hwmon5/recalculate
+
+while [ ! -f stop ]
+do
+	actualTemp=$(sensors | grep edge | cut -d "+" -f 2 | cut -d "." -f 1)
+	fanspeed=0
+	index=0
+		for temp in "${tempArray[@]}"
+		do
+		   : 
+			if [[ $actualTemp -lt $temp ]]
+			then
+			break
+			else
+			fanspeed=${rpmArray[$index]}
+			fi
+		index=$((index +1))
+		done
+	echo $actualTemp C rmp $fanspeed
+	echo $fanspeed > /sys/class/hwmon/hwmon5/fan1_target
+	sleep 2
+done
+
+rm stop
+gracefull_exit
