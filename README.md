@@ -18,6 +18,12 @@ This script reads every 2 seconds the "edge" temp of the steam deck CPU and adju
 
 **If the script is killed or suffers an error, the fan speed will remain as the last speed set even after rebooting the SteamDeck, never set you lowest temp too high**
 
+**If this happens, to activate the auto fan profile, relaunch and close properly the script, or launch as root the command:**
+
+**echo 0 > /sys/class/hwmon/hwmon5/recalculate**
+
+
+
 ### Script configuration
 
 The speeds file must be on the same directory as the script, the format is:
